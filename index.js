@@ -36,8 +36,23 @@ app.get('/', (req, res) => {
 
 const PhonesCollection = client.db('justBuy').collection('phones');
 const CategoriesCollection = client.db('justBuy').collection('categories');
+const UsersCollection = client.db('justBuy').collection('users');
 
 // devs api calls 
+// users api calls
+app.post('/users', async (req, res) => {
+    try {
+        const userData = req.body;
+        const query = {email : userData.email}
+        const exist = await UsersCollection.findOne(query);
+        if(!exist){
+            const result = await UsersCollection.insertOne(userData);
+            res.send(result)
+        }
+    } catch (error) {
+        console.log(error)
+    }
+})
 // loading on category title
 app.get('/categories', async (req, res) => {
     try {
