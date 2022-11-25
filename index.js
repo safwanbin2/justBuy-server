@@ -77,6 +77,16 @@ app.get('/categories/:category', async (req, res) => {
         console.log(error)
     }
 })
+// inserting phones
+app.post('/phones', async (req, res) => {
+    try {
+        const newPhone = req.body;
+        const result = await PhonesCollection.insertOne(newPhone);
+        res.send(result);
+    } catch (error) {
+        console.log(error)
+    }
+})
 // posting bookings
 app.post('/bookings', async (req, res) => {
     try {
