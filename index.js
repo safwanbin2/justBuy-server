@@ -87,6 +87,26 @@ app.post('/bookings', async (req, res) => {
         console.log(error)
     }
 })
+// gettoing my orders
+app.get('/myorders', async (req, res) => {
+    try {
+        const email = req.query.email;
+        const filter = { buyerEmail: email }
+        const result = await BookingCollection.find(filter).toArray();
+        res.send(result)
+    } catch (error) {
+        console.log(error)
+    }
+})
+
+
+
+
+
+
+
+
+
 
 // listing to the port
 app.listen(port, () => {
