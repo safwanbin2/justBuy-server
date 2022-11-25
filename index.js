@@ -54,6 +54,13 @@ app.post('/users', async (req, res) => {
         console.log(error)
     }
 })
+// getting all the buers
+app.get('/users', async (req, res) => {
+    const role = req.query.role;
+    const filter = { role: role }
+    const result = await UsersCollection.find(filter).toArray();
+    res.send(result)
+})
 // loading on category title
 app.get('/categories', async (req, res) => {
     try {
