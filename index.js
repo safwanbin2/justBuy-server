@@ -17,6 +17,21 @@ app.use(cors())
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.6ua546u.mongodb.net/?retryWrites=true&w=majority`;
 const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true, serverApi: ServerApiVersion.v1 });
 
+// verifying jwt token middleware
+function verifyJWT(req, res, next) {
+    const authHeader = req.headers;
+    if (!authHeader) {
+        res.status(403).send({ message: "Unauthorized access" })
+    }
+    const token = authHeader.split(' ')[0];
+    jwt.verify(token, process.env.JWT_TOKEN_SECRET, (err, decoded) => {
+        if (err) {
+            res.status(403).send({ message: "Unauthorized access" })
+        }
+        req.decoded = decoded;
+        next();
+    })
+}
 // connecting mongodb to the server
 async function run() {
     try {
@@ -60,6 +75,16 @@ app.get('/users', async (req, res) => {
     const filter = { role: role }
     const result = await UsersCollection.find(filter).toArray();
     res.send(result)
+})
+// posting for issuing jwt token
+app.get('/jwt', async (req, res) => {
+    try {
+        const email = req.query.email;
+        const token = jwt.sign(email, process.env.JWT_TOKEN_SECRET);
+        res.send({ token });
+    } catch (error) {
+        console.log(error)
+    }
 })
 // loading on category title
 app.get('/categories', async (req, res) => {
