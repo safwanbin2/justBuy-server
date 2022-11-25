@@ -87,6 +87,17 @@ app.post('/phones', async (req, res) => {
         console.log(error)
     }
 })
+// getting user phones
+app.get('/phones', async (req, res) => {
+    try {
+        const email = req.query.email;
+        const query = { sellerEmail: email }
+        const result = await PhonesCollection.find(query).toArray();
+        res.send(result)
+    } catch (error) {
+        console.log(error)
+    }
+})
 // posting bookings
 app.post('/bookings', async (req, res) => {
     try {
