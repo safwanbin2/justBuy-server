@@ -64,7 +64,16 @@ function verifySeller(req, res, next) {
     }
     next();
 }
-
+// middleware for checking admin
+function verifyAdmin(req, res, next) {
+    const decoded = req.decoded;
+    const filter = { email: decoded };
+    const exist = UsersCollection.findOne(filter);
+    if (!exist) {
+        return res.status(401).send({ message: "forbidden access" })
+    }
+    next();
+}
 // devs api calls 
 // users api calls
 app.post('/users', async (req, res) => {
@@ -86,6 +95,17 @@ app.get('/users', async (req, res) => {
     const filter = { role: role }
     const result = await UsersCollection.find(filter).toArray();
     res.send(result)
+})
+// deleting user;
+app.delete('/users/:id', verifyJWT, verifyAdmin, async (req, res) => {
+    try {
+        const id = req.params.id;
+        const filter = { _id: ObjectId(id) }
+        const result = await UsersCollection.deleteOne(filter);
+        res.send(result)
+    } catch (error) {
+        console.log(error)
+    }
 })
 // verifying seller and admin by useAdmin and useSeller
 app.get('/users/admin/:email', async (req, res) => {
@@ -154,6 +174,18 @@ app.post('/phones', verifyJWT, verifySeller, async (req, res) => {
         const newPhone = req.body;
         const result = await PhonesCollection.insertOne(newPhone);
         res.send(result);
+    } catch (error) {
+        console.log(error)
+    }
+})
+// deleting phones with specific id
+app.delete('/phones/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        console.log(id)
+        const filter = { _id: ObjectId(id) };
+        const result = await PhonesCollection.deleteOne(filter);
+        res.send(result)
     } catch (error) {
         console.log(error)
     }
