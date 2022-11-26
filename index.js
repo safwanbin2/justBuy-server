@@ -107,6 +107,22 @@ app.delete('/users/:id', verifyJWT, verifyAdmin, async (req, res) => {
         console.log(error)
     }
 })
+// updating isVerified for user by admin
+app.get('/users/:id', verifyJWT, verifyAdmin, async (req, res) => {
+    try {
+        const id = req.params.id;
+        const filter = { _id: ObjectId(id) }
+        const updateDoc = {
+            $set: {
+                isVerified: true
+            }
+        }
+        const result = await UsersCollection.updateOne(filter, updateDoc, { upsert: true });
+        res.send(result);
+    } catch (error) {
+        console.log(error)
+    }
+})
 // verifying seller and admin by useAdmin and useSeller
 app.get('/users/admin/:email', async (req, res) => {
     try {
@@ -190,7 +206,7 @@ app.delete('/phones/:id', async (req, res) => {
     }
 })
 // updating phonse advertise status
-app.get('/phones/advertise/:id', async (req, res) => {
+app.get('/phones/advertise/:id', verifyJWT, async (req, res) => {
     try {
         const id = req.params.id;
         const filter = { _id: ObjectId(id) }
