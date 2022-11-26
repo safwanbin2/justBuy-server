@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const jwt = require('jsonwebtoken');
 require('dotenv').config();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
 
 // express app
@@ -76,6 +76,33 @@ app.get('/users', async (req, res) => {
     const result = await UsersCollection.find(filter).toArray();
     res.send(result)
 })
+// verifying seller and admin by useAdmin and useSeller
+app.get('/users/admin/:email', async (req, res) => {
+    try {
+        const email = req.params.email;
+        const filter = { email: email };
+        const exist = await UsersCollection.findOne(filter);
+        if (exist.role == 'admin') {
+            return res.send({ isAdmin: true });
+        }
+        res.status(401).send({ message: "forbidden access" });
+    } catch (error) {
+        console.log(error)
+    }
+})
+app.get('/users/seller/:email', async (req, res) => {
+    try {
+        const email = req.params.email;
+        const filter = { email: email };
+        const exist = await UsersCollection.findOne(filter);
+        if (exist.role == 'seller') {
+            return res.send({ isSeller: true })
+        }
+        res.status(401).send({ message: "forbidden access" });
+    } catch (error) {
+        console.log(error)
+    }
+})
 // posting for issuing jwt token
 app.get('/jwt', async (req, res) => {
     try {
@@ -115,6 +142,33 @@ app.post('/phones', async (req, res) => {
         const newPhone = req.body;
         const result = await PhonesCollection.insertOne(newPhone);
         res.send(result);
+    } catch (error) {
+        console.log(error)
+    }
+})
+// updating phonse advertise status
+app.get('/phones/advertise/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const filter = { _id: ObjectId(id) }
+        const updateDoc = {
+            $set: {
+                isAdvertised: true
+            }
+        }
+
+        const result = await PhonesCollection.updateOne(filter, updateDoc, { upsert: true })
+        res.send(result)
+    } catch (error) {
+        console.log(error)
+    }
+})
+// getting only advertised phones from phone collection
+app.get('/phones/advertise', async (req, res) => {
+    try {
+        const filter = { isAdvertised: true };
+        const result = await PhonesCollection.find(filter).toArray();
+        res.send(result)
     } catch (error) {
         console.log(error)
     }
