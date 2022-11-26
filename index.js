@@ -19,11 +19,11 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 
 // verifying jwt token middleware
 function verifyJWT(req, res, next) {
-    const authHeader = req.headers;
+    const authHeader = req.headers.authorization;
     if (!authHeader) {
         res.status(403).send({ message: "Unauthorized access" })
     }
-    const token = authHeader.split(' ')[0];
+    const token = authHeader.split(' ')[1];
     jwt.verify(token, process.env.JWT_TOKEN_SECRET, (err, decoded) => {
         if (err) {
             res.status(403).send({ message: "Unauthorized access" })
@@ -53,6 +53,17 @@ const PhonesCollection = client.db('justBuy').collection('phones');
 const CategoriesCollection = client.db('justBuy').collection('categories');
 const UsersCollection = client.db('justBuy').collection('users');
 const BookingCollection = client.db('justBuy').collection('bookings');
+
+// middleware for checking seller
+function verifySeller(req, res, next) {
+    const decoded = req.decoded;
+    const filter = { email: decoded };
+    const exist = UsersCollection.find(filter);
+    if (!exist) {
+        return res.status(401).send({ message: "forbidden access" })
+    }
+    next();
+}
 
 // devs api calls 
 // users api calls
@@ -125,8 +136,9 @@ app.get('/categories', async (req, res) => {
     }
 })
 // loading category specific phones
-app.get('/categories/:category', async (req, res) => {
+app.get('/categories/:category', verifyJWT, async (req, res) => {
     try {
+        const decoded = req.decoded;
         const category = req.params.category;
         const query = { category: category }
         const data = PhonesCollection.find(query);
@@ -137,7 +149,7 @@ app.get('/categories/:category', async (req, res) => {
     }
 })
 // inserting phones
-app.post('/phones', async (req, res) => {
+app.post('/phones', verifyJWT, verifySeller, async (req, res) => {
     try {
         const newPhone = req.body;
         const result = await PhonesCollection.insertOne(newPhone);
