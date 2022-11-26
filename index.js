@@ -182,7 +182,6 @@ app.post('/phones', verifyJWT, verifySeller, async (req, res) => {
 app.delete('/phones/:id', async (req, res) => {
     try {
         const id = req.params.id;
-        console.log(id)
         const filter = { _id: ObjectId(id) };
         const result = await PhonesCollection.deleteOne(filter);
         res.send(result)
