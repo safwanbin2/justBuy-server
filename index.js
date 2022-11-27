@@ -53,6 +53,7 @@ const PhonesCollection = client.db('justBuy').collection('phones');
 const CategoriesCollection = client.db('justBuy').collection('categories');
 const UsersCollection = client.db('justBuy').collection('users');
 const BookingCollection = client.db('justBuy').collection('bookings');
+const WishListCollection = client.db('justBuy').collection('wishlists')
 
 // middleware for checking seller
 function verifySeller(req, res, next) {
@@ -123,6 +124,20 @@ app.get('/users/:id', verifyJWT, verifyAdmin, async (req, res) => {
         console.log(error)
     }
 })
+// getting verified seller
+app.get('/users/seller/isverified', async (req, res) => {
+    try {
+        const email = req.query.email;
+        const filter = { email: email };
+        const exist = await UsersCollection.findOne(filter);
+        if (exist.isVerified) {
+            return res.send({ isVerified: true })
+        }
+        res.send({ isVerified: false })
+    } catch (error) {
+        console.log(error)
+    }
+})
 // verifying seller and admin by useAdmin and useSeller
 app.get('/users/admin/:email', async (req, res) => {
     try {
@@ -145,7 +160,9 @@ app.get('/users/seller/:email', async (req, res) => {
         if (exist.role == 'seller') {
             return res.send({ isSeller: true })
         }
-        res.status(401).send({ message: "forbidden access" });
+        else {
+            res.status(401).send({ message: "forbidden access" });
+        }
     } catch (error) {
         console.log(error)
     }
@@ -264,7 +281,21 @@ app.get('/myorders', async (req, res) => {
         console.log(error)
     }
 })
-
+// adding item to the wishlist
+app.post('/wishlist', async (req, res) => {
+    try {
+        const newItem = req.body;
+        const filter = { phoneId: newItem.phoneId };
+        const exist = await WishListCollection.findOne(filter);
+        if (exist) {
+            return res.send({ message: "Item already exist in your wishlist" })
+        }
+        const result = await WishListCollection.insertOne(newItem);
+        res.send(result);
+    } catch (error) {
+        console.log(error)
+    }
+})
 
 
 
