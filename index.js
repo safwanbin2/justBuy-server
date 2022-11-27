@@ -296,7 +296,17 @@ app.post('/wishlist', async (req, res) => {
         console.log(error)
     }
 })
-
+// getting user specific wishlist according to email
+app.get('/wishlist', async (req, res) => {
+    try {
+        const email = req.query.email;
+        const filter = { buyerEmail: email }
+        const result = await WishListCollection.find(filter).toArray();
+        res.send(result)
+    } catch (error) {
+        console.log(error)
+    }
+})
 
 
 
