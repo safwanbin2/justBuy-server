@@ -270,6 +270,17 @@ app.post('/bookings', async (req, res) => {
         console.log(error)
     }
 })
+// getting specific booking with with id
+app.get('/bookings/payment/:id', async (req, res) => {
+    try {
+        const id = req.params.id;
+        const filter = { _id: ObjectId(id) }
+        const result = await BookingCollection.findOne(filter);
+        res.send(result)
+    } catch (error) {
+        console.log(error)
+    }
+})
 // gettoing my orders
 app.get('/myorders', async (req, res) => {
     try {
@@ -285,7 +296,7 @@ app.get('/myorders', async (req, res) => {
 app.post('/wishlist', async (req, res) => {
     try {
         const newItem = req.body;
-        const filter = { phoneId: newItem.phoneId };
+        const filter = { phoneId: newItem.phoneId, buyerEmail: newItem.buyerEmail };
         const exist = await WishListCollection.findOne(filter);
         if (exist) {
             return res.send({ message: "Item already exist in your wishlist" })
