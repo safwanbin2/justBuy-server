@@ -5,6 +5,8 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const port = process.env.PORT || 5000;
+const stripe = require("stripe")(process.env.STRIPE_SK)
+// https://just-buy-server.vercel.app/
 
 // express app
 const app = express();
@@ -54,6 +56,7 @@ const CategoriesCollection = client.db('justBuy').collection('categories');
 const UsersCollection = client.db('justBuy').collection('users');
 const BookingCollection = client.db('justBuy').collection('bookings');
 const WishListCollection = client.db('justBuy').collection('wishlists')
+const PaymentsCollection = client.db('justBuy').collection('payments')
 
 // middleware for checking seller
 function verifySeller(req, res, next) {
@@ -193,7 +196,10 @@ app.get('/categories/:category', verifyJWT, async (req, res) => {
     try {
         const decoded = req.decoded;
         const category = req.params.category;
-        const query = { category: category }
+        const query = {
+            category: category,
+            // paid: false
+        }
         const data = PhonesCollection.find(query);
         const result = await data.toArray();
         res.send(result)
@@ -242,7 +248,10 @@ app.get('/phones/advertise/:id', verifyJWT, async (req, res) => {
 // getting only advertised phones from phone collection
 app.get('/phones/advertise', async (req, res) => {
     try {
-        const filter = { isAdvertised: true };
+        const filter = {
+            isAdvertised: true,
+            paid: false
+        };
         const result = await PhonesCollection.find(filter).toArray();
         res.send(result)
     } catch (error) {
@@ -318,9 +327,46 @@ app.get('/wishlist', async (req, res) => {
         console.log(error)
     }
 })
+// creating payment intent
+app.post('/create-payment-intent', async (req, res) => {
+    try {
+        const price = req.body.sellPrice;
+        const amount = parseFloat(price * 100);
 
+        const paymentIntent = await stripe.paymentIntents.create({
+            amount: amount,
+            currency: "usd",
+            "payment_method_types": [
+                "card"
+            ]
+        })
 
+        res.send({ clientSecret: paymentIntent.client_secret })
+    } catch (error) {
+        console.log(error)
+    }
+})
 
+app.post('/payments', async (req, res) => {
+    try {
+        const newPayment = req.body;
+        const result = await PaymentsCollection.insertOne(newPayment);
+        const id = newPayment.bookingId;
+        const pId = newPayment.productId;
+        const filter = { _id: ObjectId(id) }
+        const query = { _id: ObjectId(pId) }
+        const updateDoc = {
+            $set: {
+                paid: true
+            }
+        }
+        const updateResultBooking = await BookingCollection.updateOne(filter, updateDoc, { upsert: true });
+        const updateResultPhones = await PhonesCollection.updateOne(query, updateDoc, { upsert: true });
+        res.send(result)
+    } catch (error) {
+        console.log(error)
+    }
+})
 
 
 
