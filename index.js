@@ -198,7 +198,7 @@ app.get('/categories/:category', verifyJWT, async (req, res) => {
         const category = req.params.category;
         const query = {
             category: category,
-            // paid: false
+            paid: false
         }
         const data = PhonesCollection.find(query);
         const result = await data.toArray();
