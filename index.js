@@ -147,7 +147,7 @@ app.get('/users/admin/:email', async (req, res) => {
         const email = req.params.email;
         const filter = { email: email };
         const exist = await UsersCollection.findOne(filter);
-        if (exist.role == 'admin') {
+        if (exist?.role == 'admin') {
             return res.send({ isAdmin: true });
         }
         res.status(401).send({ message: "forbidden access" });
@@ -160,7 +160,7 @@ app.get('/users/seller/:email', async (req, res) => {
         const email = req.params.email;
         const filter = { email: email };
         const exist = await UsersCollection.findOne(filter);
-        if (exist.role == 'seller') {
+        if (exist?.role == 'seller') {
             return res.send({ isSeller: true })
         }
         else {
